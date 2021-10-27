@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+<h1>PDF.js</h1>
+<input type="file" id="pdf_input"></input>
+<script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://mozilla.github.io/pdf.js/build/pdf.worker.js";
+  const inputElement = document.getElementById("pdf_input");
+  inputElement.addEventListener("change", handleFiles, false);
+  function handleFiles() {
+    const fileList = this.files; /* now you can work with the file list */
+    if (this.files && this.files[0]) {
+      var file = this.files[0];
+      var path = (window.URL || window.webkitURL).createObjectURL(file);
+      openpdf(path);
+    }
+  }
+
+  function openpdf(file) {
+    const loadingTask = pdfjsLib.getDocument({ url: file });
+    loadingTask.promise.then(function(pdf) {
+      var pdfDocument = pdf;
+      var pagesPromises = [];
+
+      for (var i = 0; i < pdf.numPages; i++) {
+        // Required to prevent that i is always the total of pages
+        (function(pageNumber) {
+          pagesPromises.push(getPageText(pageNumber, pdfDocument));
+        })(i + 1);
+      }
+
+      Promise.all(pagesPromises).then(function(pagesText) {
+        // Display text of all the pages in the console
+        const paragraph = document.createElement("div");
+        paragraph.className = "PARAGRAPH";
+        paragraph.innerHTML = pagesText;
+        document.body.appendChild(paragraph);
+      });
+
+    }, function(reason) {
+      console.error(reason);
+    });
+  }
+
+  /**
+   * Retrieves the text of a specif page within a PDF Document obtained through pdf.js
+   *
+   * @param {Integer} pageNum Specifies the number of the page
+   * @param {PDFDocument} PDFDocumentInstance The PDF document obtained
+   **/
+  function getPageText(pageNum, PDFDocumentInstance) {
+    // Return a Promise that is solved once the text of the page is retrieven
+    return new Promise(function (resolve, reject) {
+      PDFDocumentInstance.getPage(pageNum).then(function (pdfPage) {
+        // The main trick to obtain the text of the PDF page, use the getTextContent method
+        pdfPage.getTextContent().then(function (textContent) {
+          var textItems = textContent.items;
+          var finalString = "";
+
+          // Concatenate the string of the item to the final string
+          finalString += "</br><em>page"
+          finalString += (pageNum + "</em></br>")
+          for (var i = 0; i < textItems.length; i++) {
+            var item = textItems[i];
+            finalString += item.str + " ";
+          }
+          finalString += "</br></br></br>"
+          // Solve promise with the text retrieven from the page
+          resolve(finalString);
+        });
+      });
+    });
+  }
+</script>
+</body>
+
+</html>
