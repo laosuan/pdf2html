@@ -5,82 +5,213 @@
   <title></title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="pagination.css" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    ul, li {
+      list-style: none;
+    }
+
+    #wrapper {
+      width: 900px;
+      margin: 20px auto;
+    }
+
+    .data-container {
+      margin-top: 20px;
+    }
+
+    .data-container ul {
+      padding: 0;
+      margin: 0;
+    }
+
+    .data-container li {
+      margin-bottom: 5px;
+      padding: 5px 10px;
+      background: #eee;
+      color: #666;
+    }
+  </style>
 </head>
 
 <body>
 <h1>PDF.js</h1>
 <input type="file" id="pdf_input"></input>
-<script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
-<script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "https://mozilla.github.io/pdf.js/build/pdf.worker.js";
-  const inputElement = document.getElementById("pdf_input");
-  inputElement.addEventListener("change", handleFiles, false);
-  function handleFiles() {
-    const fileList = this.files; /* now you can work with the file list */
-    if (this.files && this.files[0]) {
-      var file = this.files[0];
-      var path = (window.URL || window.webkitURL).createObjectURL(file);
-      openpdf(path);
-    }
-  }
+<div></br><button id="new_window">open new window</button></div>
+<div id="wrapper">
+  <section>
+    <div class="data-container"></div>
+    <div id="pagination-demo1"></div>
+    <div class="data-container"></div>
+    <div id="pagination-demo2"></div>
+  </section>
 
-  function openpdf(file) {
-    const loadingTask = pdfjsLib.getDocument({ url: file });
-    loadingTask.promise.then(function(pdf) {
-      var pdfDocument = pdf;
-      var pagesPromises = [];
+  <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+  <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+  <script src="pagination.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://mozilla.github.io/pdf.js/build/pdf.worker.js";
+    const inputElement = document.getElementById("pdf_input");
+    inputElement.addEventListener("change", handleFiles, false);
+    const openElement = document.getElementById("new_window");
+    openElement.addEventListener("click", newBlob, false);
 
-      for (var i = 0; i < pdf.numPages; i++) {
-        // Required to prevent that i is always the total of pages
-        (function(pageNumber) {
-          pagesPromises.push(getPageText(pageNumber, pdfDocument));
-        })(i + 1);
+    function handleFiles() {
+      const fileList = this.files; /* now you can work with the file list */
+      if (this.files && this.files[0]) {
+        var file = this.files[0];
+        var path = (window.URL || window.webkitURL).createObjectURL(file);
+        openpdf(path);
       }
+    }
 
-      Promise.all(pagesPromises).then(function(pagesText) {
-        // Display text of all the pages in the console
-        const paragraph = document.createElement("div");
-        paragraph.className = "PARAGRAPH";
-        paragraph.innerHTML = pagesText;
-        document.body.appendChild(paragraph);
-      });
+    function newBlob() {
+      var newWindowContent = document.getElementById("pagination-demo1").innerHTML;
+      var newWindow = window.open("");
+      newWindow.document.write(`<head>
+  <link href="pagination.css" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    ul, li {
+      list-style: none;
+    }
 
-    }, function(reason) {
-      console.error(reason);
-    });
-  }
+    #wrapper {
+      width: 900px;
+      margin: 20px auto;
+    }
 
-  /**
-   * Retrieves the text of a specif page within a PDF Document obtained through pdf.js
-   *
-   * @param {Integer} pageNum Specifies the number of the page
-   * @param {PDFDocument} PDFDocumentInstance The PDF document obtained
-   **/
-  function getPageText(pageNum, PDFDocumentInstance) {
-    // Return a Promise that is solved once the text of the page is retrieven
-    return new Promise(function (resolve, reject) {
-      PDFDocumentInstance.getPage(pageNum).then(function (pdfPage) {
-        // The main trick to obtain the text of the PDF page, use the getTextContent method
-        pdfPage.getTextContent().then(function (textContent) {
-          var textItems = textContent.items;
-          var finalString = "";
+    .data-container {
+      margin-top: 20px;
+    }
 
-          // Concatenate the string of the item to the final string
-          finalString += "</br><em>page"
-          finalString += (pageNum + "</em></br>")
-          for (var i = 0; i < textItems.length; i++) {
-            var item = textItems[i];
-            finalString += item.str + " ";
+    .data-container ul {
+      padding: 0;
+      margin: 0;
+    }
+
+    .data-container li {
+      margin-bottom: 5px;
+      padding: 5px 10px;
+      background: #eee;
+      color: #666;
+    }
+  </style>
+</head>`)
+      newWindow.document.write(newWindowContent);
+    }
+
+    function openpdf(file) {
+      const loadingTask = pdfjsLib.getDocument({ url: file });
+
+      loadingTask.promise.then(function(pdf) {
+        var pdfDocument = pdf;
+        var pagesPromises = [];
+
+        for (var i = 0; i < pdf.numPages; i++) {
+          // Required to prevent that i is always the total of pages
+          (function(pageNumber) {
+            pagesPromises.push(getPageText(pageNumber, pdfDocument));
+          })(i + 1);
+        }
+
+
+        Promise.all(pagesPromises).then(function(pagesText) {
+          // Display text of all the pages in the console
+          // const paragraph = document.createElement("div");
+          // paragraph.className = "PARAGRAPH";
+          // paragraph.setAttribute("id", "PARAGRAPH");
+          // paragraph.innerHTML = pagesText;
+          // document.body.appendChild(paragraph);
+          var pageList = [];
+          pageList.push(pagesText);
+          return pageList;
+        }).then(function (pageList) {
+          if (pageList && pageList.length > 0) {
+            runOnStart(pageList[0]);
           }
-          finalString += "</br></br></br>"
-          // Solve promise with the text retrieven from the page
-          resolve(finalString);
+        })
+
+      }, function(reason) {
+        console.error(reason);
+      });
+    }
+
+    /**
+     * Retrieves the text of a specif page within a PDF Document obtained through pdf.js
+     *
+     * @param {Integer} pageNum Specifies the number of the page
+     * @param {PDFDocument} PDFDocumentInstance The PDF document obtained
+     **/
+    function getPageText(pageNum, PDFDocumentInstance) {
+      // Return a Promise that is solved once the text of the page is retrieven
+      return new Promise(function (resolve, reject) {
+        PDFDocumentInstance.getPage(pageNum).then(function (pdfPage) {
+          // The main trick to obtain the text of the PDF page, use the getTextContent method
+          pdfPage.getTextContent().then(function (textContent) {
+            var textItems = textContent.items;
+            var finalString = "";
+
+            // Concatenate the string of the item to the final string
+            finalString += "</br><em>page"
+            finalString += (pageNum + "</em></br>")
+            for (var i = 0; i < textItems.length; i++) {
+              var item = textItems[i];
+              finalString += item.str + " ";
+            }
+            finalString += "</br></br></br>"
+            // Solve promise with the text retrieven from the page
+            resolve(finalString);
+          });
         });
       });
-    });
-  }
-</script>
+    }
+
+    function runOnStart(pageList) {
+      var container = $('#pagination-demo1');
+      var sources = function () {
+        var result = [];
+
+        for (var i = 1; i <= pageList.length; i++) {
+          result.push(pageList[i-1]);
+        }
+
+        return result;
+      }();
+      var options = {
+        dataSource: sources,
+        ajax: {
+          beforeSend: function() {
+            container.prev().html('Loading data from pdf ...');
+          }
+        },
+        callback: function (response, pagination) {
+          window.console && console.log(response, pagination);
+
+          var dataHtml = '<ul>';
+
+          $.each(response, function (index, item) {
+            dataHtml += '<li>' + item + '</li>';
+          });
+
+          dataHtml += '</ul>';
+
+          container.prev().html(dataHtml);
+        }
+      };
+
+      // $.pagination(container, options);
+
+      container.addHook('beforeInit', function () {
+        window.console && console.log('beforeInit...');
+      });
+      container.pagination(options);
+      container.addHook('beforePageOnClick', function () {
+        window.console && console.log('beforePageOnClick...');
+        //return false
+      });
+    }
+  </script>
 </body>
 
 </html>
