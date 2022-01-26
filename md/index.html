@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+<h1>generate md file</h1>
+
+
+<div class="fanyi__operations">
+  <div class="fanyi__operations--left">
+    <div id="langSelect" class="lang-select item-select">
+      <span class="select-text">pdf纯文本去除页数</span>
+      <ul id="languageSelect" class="select clear">
+        <li class="default selected" data-value="AUTO"><a href="javascript:;">自动检测语言</a></li>
+        <li data-value="zh-CHS2en"><a href="javascript:;">中文&nbsp; » &nbsp;英语</a></li>
+        <li data-value="en2zh-CHS"><a href="javascript:;">英语&nbsp; » &nbsp;中文</a></li>
+        <li data-value="zh-CHS2ja"><a href="javascript:;">中文&nbsp; » &nbsp;日语</a></li>
+      </ul>
+      <input class="select-input" id="language" name="language" type="hidden" value="AUTO">
+    </div>
+    <a class="fanyi__operations--machine" id="transMachine" href="javascript:;" style="background-color: rgb(224, 36, 51); border-radius: 3px; color: rgb(255, 255, 255); cursor: pointer; display: inline-block;
+    font-family: PingFang-SC-Regular; font-size: 14px; height: 38px; line-height: 38px; margin-left: 16px; text-align: center; text-decoration: none; vertical-align: middle; width: 108px;">generate</a>
+  </div>
+</div>
+
+<div class="fanyi__input">
+  <div class="input__original">
+    <div class="fanyi__input__bg">
+      <textarea id="inputOriginal1" dir="auto" class="input__original__area" placeholder="请输入英文文本"></textarea>
+    </div>
+  </div>
+
+  <div class="input__original">
+    <div class="fanyi__input__bg">
+      <textarea id="inputOriginal2" dir="auto" class="input__original__area" placeholder="请输入翻译文本"></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+  const openElement = document.getElementById("transMachine");
+  openElement.addEventListener("click", generate, false);
+
+  function generate() {
+    var inputOriginal1Text = document.getElementById("inputOriginal1").value;
+    var inputOriginal2Text = document.getElementById("inputOriginal2").value;
+
+    var translateList = []
+    inputOriginal2Text.split(/\r?\n/).forEach(line =>  {
+      translateList.push(line)
+    });
+
+    var file = "out.md"
+    var length = 0
+    var count = 0
+    var preWAppendStr = ""
+    var preAppendTranslateStr = ""
+    var resultStr = ""
+    inputOriginal1Text.split(/\r?\n/).forEach(line =>  {
+      var translateLine = translateList[count]
+      length += line.length
+      if (length > 100) {
+        resultStr += preWAppendStr + '\r\n' + line
+        resultStr += '\r\n' + "<details><summary>翻译</summary>" + preAppendTranslateStr + translateLine + "</details>"
+        preWAppendStr = ""
+        preAppendTranslateStr = ""
+        length = 0
+      } else {
+        preWAppendStr += line + '\r\n'
+        preAppendTranslateStr += translateLine + " "
+      }
+      count++
+    });
+
+    downloadString(resultStr, "text/plain", file);
+
+  }
+
+
+
+  // copy from: https://gist.github.com/danallison/3ec9d5314788b337b682
+  // Thanks! https://github.com/danallison
+  // work in Chrome 66
+  // test passed: 2018-5-19
+  function downloadString(text, fileType, fileName) {
+    var blob = new Blob([text], {
+      type: fileType
+    });
+    var a = document.createElement('a');
+    a.download = fileName;
+    a.href = URL.createObjectURL(blob);
+    a.dataset.downloadurl = [fileType, a.download, a.href].join(':');
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () {
+      URL.revokeObjectURL(a.href);
+    }, 1500);
+  }
+</script>
+
+<style>
+  div.fanyi__input {
+    color: #434343;
+    font-family: PingFangSC-Semibold,"Microsoft YaHei",Arial,sans-serif,Helvetica,STHeiti;
+    font-size: 0;
+    margin: 18px 60px 0;
+  }
+
+  div.input__original {
+    color: #434343;
+    display: inline-block;
+    font-family: PingFangSC-Semibold,"Microsoft YaHei",Arial,sans-serif,Helvetica,STHeiti;
+    font-size: 14px;
+    vertical-align: top;
+    width: 50%;
+  }
+
+  div.fanyi__input__bg {
+    background-color: #f2f2f2;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: #434343;
+    font-family: PingFangSC-Semibold,"Microsoft YaHei",Arial,sans-serif,Helvetica,STHeiti;
+    font-size: 14px;
+    margin-right: 10px;
+    overflow: hidden;
+    padding: 5px 5px 5px 5px;
+    position: relative;
+    z-index: 1;
+  }
+
+  textarea#inputOriginal1.input__original__area {
+    background-color: initial;
+    background-position: 0 0;
+    border-width: 0;
+    color: #333;
+    cursor: text;
+    display: block;
+    font-family: ArialMT,"Microsoft YaHei",Arial,sans-serif,Helvetica,STHeiti;
+    font-size: 14px;
+    line-height: 30px;
+    min-height: 500px;
+    outline: 0;
+    overflow: auto;
+    padding: 0;
+    resize: none;
+    white-space: pre-wrap;
+    width: 100%;
+    word-wrap: break-word;
+  }
+
+  textarea#inputOriginal2.input__original__area {
+    background-color: initial;
+    background-position: 0 0;
+    border-width: 0;
+    color: #333;
+    cursor: text;
+    display: block;
+    font-family: ArialMT,"Microsoft YaHei",Arial,sans-serif,Helvetica,STHeiti;
+    font-size: 14px;
+    line-height: 30px;
+    min-height: 500px;
+    outline: 0;
+    overflow: auto;
+    padding: 0;
+    resize: none;
+    white-space: pre-wrap;
+    width: 100%;
+    word-wrap: break-word;
+  }
+
+  div.fanyi__operations {
+    color: #434343;
+    font-family: PingFang-SC-Regular;
+    font-size: 12px;
+    height: 38px;
+    margin: 0 60px 18px;
+  }
+
+
+  div#langSelect.lang-select.item-select {
+    background-color: initial;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAHCAYAAAA8sqwkAAAAAXNSR0IArs4c6QAAAMJJREFUGBljYACCtrY2n////zOC2LhAR0eHJ0iOsb293enfv397GRkZF6qoqCSHhYX9RdYEMgho4BSgWBYQuzFVVlbuAyquBUrE3759e+38+fM5YBqAYkxAxbOgijurq6t3w50BlMgEKpgC1HyImZnZr6ys7CtQbD5QcRwQNwMV14EMgmsAcVpbWyOAGhYBmZeA+C7QgDAmJqYaoCtaQfIggKIBJADy3N+/f9cAmVxAxWVAxd0gcbwAGBCGQOf4YVMEAAwBTLCZoSXhAAAAAElFTkSuQmCC);
+    background-position: 95% 50%;
+    background-repeat: no-repeat no-repeat;
+    border: 1px solid #c9c9c9;
+    border-radius: 4px;
+    color: #434343;
+    cursor: pointer;
+    display: inline-block;
+    font-family: PingFang-SC-Regular;
+    font-size: 0;
+    height: 36px;
+    padding: 0 18px;
+    position: relative;
+    vertical-align: middle;
+    width: 231px;
+    z-index: 1;
+  }
+
+
+  span.select-text {
+    color: #2b2b2b;
+    cursor: pointer;
+    display: block;
+    font-family: PingFang-SC-Regular;
+    font-size: 14px;
+    height: 36px;
+    letter-spacing: 0;
+    line-height: 36px;
+    margin-right: 28px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  ul#languageSelect.select.clear {
+    background-color: #fff;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    box-shadow: rgba(0,0,0,.2) 0 0 5px 0;
+    color: #434343;
+    cursor: pointer;
+    display: none;
+    font-family: PingFang-SC-Regular;
+    font-size: 14px;
+    left: 0;
+    list-style: none;
+    list-style: outside none none;
+    margin: 0;
+    padding: 18px 10px;
+    position: absolute;
+    top: 49px;
+    width: 276px;
+    z-index: 2;
+    zoom: 1;
+  }
+</style>
+
+<div id="wrapper">
+  <section>
+    <div class="data-container"></div>
+    <div id="pagination-demo1"></div>
+    <div class="data-container"></div>
+    <div id="pagination-demo2"></div>
+  </section>
+
+  <script src="https://cdn.readword.cn/jquery-1.8.2.min.js"></script>
+
+</body>
+
+</html>
