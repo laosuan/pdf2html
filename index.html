@@ -31,6 +31,19 @@
       background: #eee;
       color: #666;
     }
+
+    p  {
+      box-sizing: border-box;
+      color: rgba(0, 0, 0, .95);
+      font-family: "PT Serif", georgia, times, serif;
+      font-size: 17px;
+      letter-spacing: .5px;
+      line-height: 28px;
+      /*padding: 8px 0;*/
+      max-width: 640px;
+      width: 100%;
+
+    }
   </style>
 </head>
 
@@ -155,13 +168,48 @@
             // Concatenate the string of the item to the final string
             finalString += "</br><em>page"
             finalString += (pageNum + "</em></br>")
+            var stringCount = 0
+            var finalFlog = true
             for (var i = 0; i < textItems.length; i++) {
               var item = textItems[i];
-              finalString += item.str + " ";
+              if (pageNum < 5) {
+                console.log('item.str ', item.str)
+              }
+             if (item.str.substring(0, 1) !== " ") {
+                finalString = finalString + " "  + item.str;
+              } else {
+               finalString = finalString + item.str
+              }
             }
-            finalString += "</br></br></br>"
-            // Solve promise with the text retrieven from the page
-            resolve(finalString);
+
+            let array = finalString.split(".")
+            var stringCount = 0
+            var finalFlog = true
+            var combineString = ""
+            for (let i = 0; i < array.length; i++) {
+              let str = array[i]
+              stringCount += str.length
+
+              if (stringCount > 150) {
+                if (finalFlog) {
+                  combineString = combineString + "<p>" + str + ".</p>";
+                  stringCount = 0
+                } else {
+                  combineString = combineString + str +  ".</p>";
+                  finalFlog = true
+                  stringCount = 0
+                }
+              } else {
+                if (finalFlog) {
+                  combineString = combineString + "<p>" + str + ".";
+                  finalFlog = false
+                } else {
+                  combineString = combineString + str + ".";
+                }
+              }
+
+            }
+            resolve(combineString);
           });
         });
       });
